@@ -1,1 +1,3 @@
-<template></template>
+<template>
+    <mi-search></mi-search>
+</template>
