@@ -1,5 +1,7 @@
 import { createTypes, VueTypesInterface } from 'vue-types'
 
+export const tuple = <T extends string[]>(...args: T) => args
+
 const PropTypes = createTypes({
     func: undefined,
     bool: undefined,
