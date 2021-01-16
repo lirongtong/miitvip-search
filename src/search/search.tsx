@@ -20,6 +20,11 @@ export default defineComponent({
         searchTime: PropTypes.oneOf(
             tuple('change', 'blur')
         ).def('change'),
+        searchKey: PropTypes.string,
+        data: PropTypes.array,
+        listHeight: PropTypes.number,
+        listRadius: PropTypes.number,
+        listNoDataText: PropTypes.string.def('暂无符合条件的数据'),
         onChange: PropTypes.func,
         onInput: PropTypes.func,
         onPressEnter: PropTypes.func,
@@ -33,7 +38,9 @@ export default defineComponent({
         return {
             prefixCls: 'mi-search',
             keyword: '',
-            isFocused: false
+            isFocused: false,
+            modal: false,
+            list: []
         }
     },
     methods: {
@@ -45,6 +52,7 @@ export default defineComponent({
         },
         handleOnFocus(e: Event) {
             this.isFocused = true
+            this.modal = true
             this.onFocus && this.onFocus(e)
         },
         handleOnBlur(e: Event) {
@@ -57,6 +65,22 @@ export default defineComponent({
         },
         handleKeyUp(e: KeyboardEvent) {
             this.$emit('keyup', e)
+        },
+        getSearchListElem() {
+            const style = {
+                height: this.listHeight ? `${tools.pxToRem(this.listHeight)}rem` : null,
+                top: this.height ? `${tools.pxToRem(this.height)}rem` : null,
+                borderRadius: this.listRadius ? `${tools.pxToRem(this.listRadius)}rem` : null
+            }
+            const cls = `${this.prefixCls}-list${this.list.length <= 0 ? ` ${this.prefixCls}-no-data` : null}`
+            const noData = this.list.length <= 0 ? (
+                <p>{ this.listNoDataText }</p>
+            ) : null
+            return (
+                <div class={cls} style={style}>
+                    { noData }
+                </div>
+            )
         }
     },
     render() {
@@ -71,6 +95,7 @@ export default defineComponent({
             color: this.textColor ?? null,
             boxShadow: this.boxShadow ? `0 0 ${tools.pxToRem(this.boxShadowBlur)}rem ${this.boxShadowColor}` : null
         }
+        const modal = this.modal ? this.getSearchListElem() : null
         return <div class={this.prefixCls} style={size}>
             <input class={`${this.prefixCls}-input`}
                 name={this.prefixCls}
@@ -83,6 +108,7 @@ export default defineComponent({
                 onKeydown={this.handleKeyDown}
                 onKeyup={this.handleKeyUp}
                 ref={this.prefixCls} />
+            { modal }
         </div>
     }
 })
