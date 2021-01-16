@@ -21,22 +21,42 @@ export default defineComponent({
             tuple('change', 'blur')
         ).def('change'),
         onChange: PropTypes.func,
+        onInput: PropTypes.func,
+        onPressEnter: PropTypes.func,
+        onKeydown: PropTypes.func,
+        onKeyup: PropTypes.func,
+        onFocus: PropTypes.func,
+        onBlur: PropTypes.func,
+        'onUpdate:value': PropTypes.func
     },
     data() {
         return {
-            prefixCls: 'mi-search'
+            prefixCls: 'mi-search',
+            keyword: '',
+            isFocused: false
         }
     },
     methods: {
-        change(e: any) {
+        handleOnInput(e: Event) {
+            this.keyword = (e.target as HTMLInputElement).value
+            this.$emit('update:value', this.keyword)
+            this.$emit('input', e)
             this.$emit('change', e)
-        }
-    },
-    mounted() {
-        const elem = this.$refs[this.prefixCls]
-        if (elem) {
-            tools.on(elem, 'input', this.change)
-            if (this.searchTime === 'blur') tools.on(elem, 'blur', this.change)
+        },
+        handleOnFocus(e: Event) {
+            this.isFocused = true
+            this.onFocus && this.onFocus(e)
+        },
+        handleOnBlur(e: Event) {
+            this.isFocused = false
+            this.onBlur && this.onBlur(e)
+        },
+        handleKeyDown(e: KeyboardEvent) {
+            if (e.keyCode === 13) this.$emit('pressEnter', e)
+            this.$emit('keydown', e)
+        },
+        handleKeyUp(e: KeyboardEvent) {
+            this.$emit('keyup', e)
         }
     },
     render() {
@@ -56,6 +76,12 @@ export default defineComponent({
                 name={this.prefixCls}
                 placeholder={this.placeholder}
                 style={style}
+                value={this.keyword}
+                onFocus={this.handleOnFocus}
+                onBlur={this.handleOnBlur}
+                onInput={this.handleOnInput}
+                onKeydown={this.handleKeyDown}
+                onKeyup={this.handleKeyUp}
                 ref={this.prefixCls} />
         </div>
     }
