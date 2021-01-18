@@ -15,6 +15,12 @@ const config = {
     },
     optimizeDeps: {
         include: ['vue', 'axios']
+    },
+    proxy: {
+        '/v1': {
+            target: 'http://local-api.makeit.vip',
+            changeOrigin: true
+        }
     }
 }
 module.exports = config

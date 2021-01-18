@@ -1,4 +1,5 @@
 import { defineComponent } from 'vue'
+import axios from 'axios'
 import PropTypes, { tuple } from '../utils/props'
 import tools from '../utils/tools'
 
@@ -20,7 +21,11 @@ export default defineComponent({
         searchTime: PropTypes.oneOf(
             tuple('change', 'blur')
         ).def('change'),
+        searchAction: PropTypes.string,
+        searchMethod: PropTypes.string.def('post'),
+        searchParams: PropTypes.object.def({}),
         searchKey: PropTypes.string,
+        searchKeyColor: PropTypes.string,
         searchDelay: PropTypes.number,
         data: PropTypes.array,
         listHeight: PropTypes.number,
@@ -42,13 +47,67 @@ export default defineComponent({
             keyword: '',
             isFocused: false,
             modal: false,
-            list: []
+            datas: this.$props.data,
+            list: [],
+            error: ''
         }
     },
+    mounted() {
+        this.list = this.datas
+    },
     methods: {
+        async handleSearch() {
+            if (this.searchAction) {
+                await axios[this.searchMethod.toLowerCase()](this.searchAction, this.searchParams).then((res: any) => {
+                    const response = res.data
+                    this.loading = false
+                    if (response.ret.code === 1) {
+                        this.datas = response.data
+                        this.handleSearchResult()
+                    } else {
+                        const errors = []
+                        errors.push('<p>源数据获取失败，搜索失败 ...</p>')
+                        errors.push(`<p>错误代码：${response.ret.code}</p>`)
+                        errors.push(`<p>错误原因：${response.ret.message}</p>`)
+                        this.error = errors.join('')
+                    }
+                }).catch((err: any) => {
+                    this.loading = false
+                    this.error = `<p>接口请求失败</p><p>${err.message}</p>`
+                })
+            } else {
+                this.loading = false
+                this.handleSearchResult()
+            }
+        },
+        handleSearchResult() {
+            const reg = new RegExp(this.keyword, 'ig')
+            for (let i = 0, l = this.datas.length; i < l; i++) {
+                const cur = this.datas[i]
+                if (
+                    cur[this.searchKey] &&
+                    reg.test(cur[this.searchKey])
+                ) {
+                    const data = {...cur}
+                    data[this.searchKey] = cur[this.searchKey].replace(
+                        reg,
+                        `<span class="${this.prefixCls}-key" style="color: ${this.searchKeyColor ?? null}">${this.keyword}</span>`
+                    )
+                    this.list.push(data)
+                }
+            }
+        },
         handleOnInput(e: Event) {
             this.keyword = (e.target as HTMLInputElement).value
-            if (this.keyword) this.loading = true
+            this.list = []
+            if (this.keyword) {
+                this.loading = true
+                this.handleSearch()
+            } else {
+                this.list = this.datas
+                this.loading = false
+                this.error = ''
+            }
             this.$emit('update:value', this.keyword)
             this.$emit('input', e)
             this.$emit('change', e)
@@ -76,16 +135,30 @@ export default defineComponent({
                 borderColor: this.borderColor ?? null,
                 borderRadius: this.listRadius ? `${tools.pxToRem(this.listRadius)}rem` : null
             }
-            const cls = `${this.prefixCls}-list${this.list.length <= 0 ? ` ${this.prefixCls}-no-data` : null}`
-            const noData = this.list.length <= 0 && !this.loading ? (
+            const cls = `${this.prefixCls}-list${this.list.length <= 0 ? ` ${this.prefixCls}-no-data` : ''}`
+            const noData = this.list.length <= 0 &&
+                !this.loading && !this.error ? (
                 <p>{ this.listNoDataText }</p>
             ) : null
+            const error = this.error ? <div class={`${this.prefixCls}-error`} innerHTML={this.error}></div> : null
             return (
                 <div class={cls} style={style}>
                     { noData }
+                    { error }
                     { this.getLoadingElem() }
+                    { this.getListResultElem() }
                 </div>
             )
+        },
+        getListResultElem() {
+            const res = []
+            for (let i = 0, l = this.list.length; i < l; i++) {
+                const cur = this.list[i]
+                res.push(`<div class="${this.prefixCls}-item">${cur[this.searchKey]}</div>`)
+            }
+            return res.length > 0 ? (
+                <div class={`${this.prefixCls}-items`} innerHTML={res.join('')}></div>
+            ) : null
         },
         getLoadingElem() {
             const loadingCls = `${this.prefixCls}-loading`
