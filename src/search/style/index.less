@@ -75,6 +75,7 @@
 
     &-list {
         width: 100%;
+        .properties(min-width, 260);
         .properties(height, 280);
         position: absolute;
         left: 0;
@@ -95,4 +96,76 @@
             color: #999;
         }
     }
+
+    &-loading {
+        width: 100%;
+        height: 100%;
+        .flex();
+        flex-direction: column;
+        .border-radius();
+        color: #999;
+        background: #fff;
+        .properties(font-size, @mi-font-size-normal);
+
+        &-spinner {
+            .properties(width, 80);
+            .properties(height, 80);
+            display: inline-block;
+            overflow: hidden;
+            background: transparent;
+
+            .load > div {
+                transform: scale(0.8);
+                transform-origin: 50px 50px;
+            }
+            
+            .load > div > div {
+                animation: mi-anim-move 1.5s linear infinite;
+                position: absolute
+            }
+            
+            .load > div > div div:nth-child(1) {
+                .properties(width, 36);
+                .properties(height, 36);
+                border-radius: 50%;
+                border: 6px solid #f6ca9d;
+                background: transparent;
+            }
+            
+            .load > div > div div:nth-child(2) {
+                .properties(width, 8.5);
+                .properties(height, 25.5);
+                transform: rotate(-45deg);
+                background: #f6ca9d;
+                border-radius: 0 0 4px 4px;
+                position: absolute;
+                .properties(top, 34);
+                .properties(left, 42.5);
+            }
+
+            .load {
+                width: 100%;
+                height: 100%;
+                position: relative;
+                transform: translateZ(0) scale(0.8);
+                backface-visibility: hidden;
+                transform-origin: 0 0;
+            }
+            .load div {
+                box-sizing: content-box;
+            }
+        }
+        
+        &-tip {
+            .properties(margin-top, 16);
+            .letter-spacing(4);
+        }
+    }
+}
+
+@keyframes mi-anim-move {
+    0% { transform: translate(1px, 1px) }
+    33.33% { transform: translate(51px, 1px) }
+    66.66% { transform: translate(21px, 51px) }
+    100% { transform: translate(1px, 1px) }
 }

@@ -21,6 +21,7 @@ export default defineComponent({
             tuple('change', 'blur')
         ).def('change'),
         searchKey: PropTypes.string,
+        searchDelay: PropTypes.number,
         data: PropTypes.array,
         listHeight: PropTypes.number,
         listRadius: PropTypes.number,
@@ -37,6 +38,7 @@ export default defineComponent({
     data() {
         return {
             prefixCls: 'mi-search',
+            loading: false,
             keyword: '',
             isFocused: false,
             modal: false,
@@ -46,6 +48,7 @@ export default defineComponent({
     methods: {
         handleOnInput(e: Event) {
             this.keyword = (e.target as HTMLInputElement).value
+            if (this.keyword) this.loading = true
             this.$emit('update:value', this.keyword)
             this.$emit('input', e)
             this.$emit('change', e)
@@ -70,17 +73,39 @@ export default defineComponent({
             const style = {
                 height: this.listHeight ? `${tools.pxToRem(this.listHeight)}rem` : null,
                 top: this.height ? `${tools.pxToRem(this.height)}rem` : null,
+                borderColor: this.borderColor ?? null,
                 borderRadius: this.listRadius ? `${tools.pxToRem(this.listRadius)}rem` : null
             }
             const cls = `${this.prefixCls}-list${this.list.length <= 0 ? ` ${this.prefixCls}-no-data` : null}`
-            const noData = this.list.length <= 0 ? (
+            const noData = this.list.length <= 0 && !this.loading ? (
                 <p>{ this.listNoDataText }</p>
             ) : null
             return (
                 <div class={cls} style={style}>
                     { noData }
+                    { this.getLoadingElem() }
                 </div>
             )
+        },
+        getLoadingElem() {
+            const loadingCls = `${this.prefixCls}-loading`
+            const style1 = {borderColor: this.borderColor ?? null}
+            const style2 = {background: this.borderColor ?? null}
+            return this.loading ? (
+                <div class={loadingCls}>
+                    <div class={`${loadingCls}-spinner`}>
+                        <div class="load">
+                            <div>
+                                <div>
+                                    <div style={style1}></div>
+                                    <div style={style2}></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class={`${loadingCls}-tip`}>正在搜索</div>
+                </div>
+            ) : null
         }
     },
     render() {
