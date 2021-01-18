@@ -18,18 +18,17 @@ export default defineComponent({
         boxShadow: PropTypes.bool.def(false),
         boxShadowColor: PropTypes.string.def('#d9d9d9'),
         boxShadowBlur: PropTypes.number.def(6),
-        searchTime: PropTypes.oneOf(
-            tuple('change', 'blur')
-        ).def('change'),
         searchAction: PropTypes.string,
         searchMethod: PropTypes.string.def('post'),
         searchParams: PropTypes.object.def({}),
-        searchKey: PropTypes.string,
+        searchKey: PropTypes.string.isRequired,
         searchKeyColor: PropTypes.string,
         searchDelay: PropTypes.number,
         data: PropTypes.array,
         listHeight: PropTypes.number,
         listRadius: PropTypes.number,
+        listItemColor: PropTypes.string,
+        listBackground: PropTypes.string,
         listNoDataText: PropTypes.string.def('暂无符合条件的数据'),
         onChange: PropTypes.func,
         onInput: PropTypes.func,
@@ -49,36 +48,45 @@ export default defineComponent({
             modal: false,
             datas: this.$props.data,
             list: [],
-            error: ''
+            error: '',
+            timer: null
         }
     },
     mounted() {
         this.list = this.datas
     },
     methods: {
-        async handleSearch() {
-            if (this.searchAction) {
-                await axios[this.searchMethod.toLowerCase()](this.searchAction, this.searchParams).then((res: any) => {
-                    const response = res.data
+        handleSearch() {
+            if (this.timer && this.searchDelay) clearTimeout(this.timer)
+            const search = () => {
+                if (this.searchAction) {
+                    axios[this.searchMethod.toLowerCase()](this.searchAction, this.searchParams).then((res: any) => {
+                        const response = res.data
+                        this.loading = false
+                        if (response.ret.code === 1) {
+                            this.datas = response.data
+                            this.handleSearchResult()
+                        } else {
+                            const errors = []
+                            errors.push('<p>源数据获取失败，搜索失败 ...</p>')
+                            errors.push(`<p>错误代码：${response.ret.code}</p>`)
+                            errors.push(`<p>错误原因：${response.ret.message}</p>`)
+                            this.error = errors.join('')
+                        }
+                    }).catch((err: any) => {
+                        this.loading = false
+                        this.error = `<p>接口请求失败</p><p>${err.message}</p>`
+                    })
+                } else {
                     this.loading = false
-                    if (response.ret.code === 1) {
-                        this.datas = response.data
-                        this.handleSearchResult()
-                    } else {
-                        const errors = []
-                        errors.push('<p>源数据获取失败，搜索失败 ...</p>')
-                        errors.push(`<p>错误代码：${response.ret.code}</p>`)
-                        errors.push(`<p>错误原因：${response.ret.message}</p>`)
-                        this.error = errors.join('')
-                    }
-                }).catch((err: any) => {
-                    this.loading = false
-                    this.error = `<p>接口请求失败</p><p>${err.message}</p>`
-                })
-            } else {
-                this.loading = false
-                this.handleSearchResult()
+                    this.handleSearchResult()
+                }
             }
+            if (this.searchDelay) {
+                this.timer = setTimeout(() => {
+                    search()
+                }, this.searchDelay * 1000)
+            } else search()
         },
         handleSearchResult() {
             const reg = new RegExp(this.keyword, 'ig')
@@ -119,6 +127,7 @@ export default defineComponent({
         },
         handleOnBlur(e: Event) {
             this.isFocused = false
+            this.modal = false
             this.onBlur && this.onBlur(e)
         },
         handleKeyDown(e: KeyboardEvent) {
@@ -132,6 +141,7 @@ export default defineComponent({
             const style = {
                 height: this.listHeight ? `${tools.pxToRem(this.listHeight)}rem` : null,
                 top: this.height ? `${tools.pxToRem(this.height)}rem` : null,
+                background: this.listBackground ?? null,
                 borderColor: this.borderColor ?? null,
                 borderRadius: this.listRadius ? `${tools.pxToRem(this.listRadius)}rem` : null
             }
@@ -154,7 +164,7 @@ export default defineComponent({
             const res = []
             for (let i = 0, l = this.list.length; i < l; i++) {
                 const cur = this.list[i]
-                res.push(`<div class="${this.prefixCls}-item">${cur[this.searchKey]}</div>`)
+                res.push(`<div class="${this.prefixCls}-item" style="color: ${this.listItemColor ?? null}">${cur[this.searchKey]}</div>`)
             }
             return res.length > 0 ? (
                 <div class={`${this.prefixCls}-items`} innerHTML={res.join('')}></div>
