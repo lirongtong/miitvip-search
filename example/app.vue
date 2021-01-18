@@ -1,5 +1,5 @@
 <template>
-    <mi-search :data="data" search-key="title"></mi-search>
+    <mi-search :data="data" search-key="title" @item-click="handleItemClick"></mi-search>
 </template>
 
 <script lang="ts">
@@ -30,6 +30,11 @@
                 }, {
                     title: '麦可易特网 - 消息中心'
                 }]
+            }
+        },
+        methods: {
+            handleItemClick(data) {
+                console.log(data)
             }
         }
     })

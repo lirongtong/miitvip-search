@@ -1,6 +1,6 @@
 import { defineComponent } from 'vue'
 import axios from 'axios'
-import PropTypes, { tuple } from '../utils/props'
+import PropTypes from '../utils/props'
 import tools from '../utils/tools'
 
 export default defineComponent({
@@ -37,11 +37,13 @@ export default defineComponent({
         onKeyup: PropTypes.func,
         onFocus: PropTypes.func,
         onBlur: PropTypes.func,
+        onItemClick: PropTypes.func,
         'onUpdate:value': PropTypes.func
     },
     data() {
         return {
             prefixCls: 'mi-search',
+            prefixIndex: 'mi-index',
             loading: false,
             keyword: '',
             isFocused: false,
@@ -57,7 +59,6 @@ export default defineComponent({
     },
     methods: {
         handleSearch() {
-            if (this.timer && this.searchDelay) clearTimeout(this.timer)
             const search = () => {
                 if (this.searchAction) {
                     axios[this.searchMethod.toLowerCase()](this.searchAction, this.searchParams).then((res: any) => {
@@ -83,6 +84,7 @@ export default defineComponent({
                 }
             }
             if (this.searchDelay) {
+                if (this.timer) clearTimeout(this.timer)
                 this.timer = setTimeout(() => {
                     search()
                 }, this.searchDelay * 1000)
@@ -101,9 +103,13 @@ export default defineComponent({
                         reg,
                         `<span class="${this.prefixCls}-key" style="color: ${this.searchKeyColor ?? null}">${this.keyword}</span>`
                     )
+                    data[this.prefixIndex] = i
                     this.list.push(data)
                 }
             }
+        },
+        handleItemClick(data: any, e?: any) {
+            this.$emit('item-click', data, e)
         },
         handleOnInput(e: Event) {
             this.keyword = (e.target as HTMLInputElement).value
@@ -127,7 +133,6 @@ export default defineComponent({
         },
         handleOnBlur(e: Event) {
             this.isFocused = false
-            this.modal = false
             this.onBlur && this.onBlur(e)
         },
         handleKeyDown(e: KeyboardEvent) {
@@ -164,10 +169,16 @@ export default defineComponent({
             const res = []
             for (let i = 0, l = this.list.length; i < l; i++) {
                 const cur = this.list[i]
-                res.push(`<div class="${this.prefixCls}-item" style="color: ${this.listItemColor ?? null}">${cur[this.searchKey]}</div>`)
+                res.push(
+                    <div class={`${this.prefixCls}-item`}
+                        style={{color: this.listItemColor ?? null}}
+                        onClick={(e: any) => this.handleItemClick(this.datas[cur[this.prefixIndex]] ?? cur, e)}
+                        innerHTML={cur[this.searchKey]}>
+                    </div>
+                )
             }
             return res.length > 0 ? (
-                <div class={`${this.prefixCls}-items`} innerHTML={res.join('')}></div>
+                <div class={`${this.prefixCls}-items`}>{ res }</div>
             ) : null
         },
         getLoadingElem() {
