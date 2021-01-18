@@ -51,11 +51,21 @@ export default defineComponent({
             datas: this.$props.data,
             list: [],
             error: '',
-            timer: null
+            timer: null,
+            clickOutside: null
         }
+    },
+    beforeUnmount() {
+        this.loading = false
+        this.modal = false
+        this.error = ''
+        this.clickOutside = null
+        this.keyword = ''
+        this.isFocused = false
     },
     mounted() {
         this.list = this.datas
+        if (!this.clickOutside) this.clickOutside = tools.on(document.body, 'click', this.handleDocumentClick)
     },
     methods: {
         handleSearch() {
@@ -141,6 +151,15 @@ export default defineComponent({
         },
         handleKeyUp(e: KeyboardEvent) {
             this.$emit('keyup', e)
+        },
+        handleDocumentClick(e: any) {
+            e.preventDefault()
+            const target = e.target
+            const root = tools.findDOMNode(this)
+            if (root && !root.contains(target)) {
+                this.modal = false
+                this.isFocused = false
+            }
         },
         getSearchListElem() {
             const style = {

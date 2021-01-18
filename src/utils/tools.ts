@@ -89,6 +89,12 @@ class MiTools {
         }
     }
 
+    findDOMNode(instance: any) {
+        let node = instance && (instance.$el || instance)
+        while (node && !node.tagName) node = node.nextSibling
+        return node
+    }
+
     /**
 	 * convert color.
 	 * @param color
