@@ -8,7 +8,7 @@
         data() {
             return {
                 data: [{
-                    title: '麦可易特网 - 登录页面麦可易特网 - 登录页面麦可易特网 - 登录页面',
+                    title: '麦可易特网 - 登录页面',
                     avatar: 'https://file.makeit.vip/MIIT/M00/00/00/ajRkHV_pUyOALE2LAAAtlj6Tt_s370.png'
                 }, {
                     title: '麦可易特网 - 滑块验证',

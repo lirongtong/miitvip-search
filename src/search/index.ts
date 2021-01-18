@@ -1,4 +1,10 @@
+import { App, Plugin } from 'vue'
 import Search from './search'
-import { install } from '../utils/install'
 
-export default install(Search)
+Search.install = function(app: App) {
+    app.component(Search.name, Search)
+    app.component(Search.Key.name, Search.Key)
+    return app
+}
+
+export default Search as typeof Search & Plugin

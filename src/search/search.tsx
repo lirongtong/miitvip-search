@@ -1,9 +1,10 @@
-import { defineComponent } from 'vue'
+import { defineComponent, isVNode, createVNode, VNode, cloneVNode } from 'vue'
 import axios from 'axios'
-import PropTypes from '../utils/props'
+import MiSearchKey from './key'
+import PropTypes, { getSlotContent } from '../utils/props'
 import tools from '../utils/tools'
 
-export default defineComponent({
+const MiSearch = defineComponent({
     name: 'MiSearch',
     inheritAttrs: false,
     props: {
@@ -25,9 +26,10 @@ export default defineComponent({
         searchKeyColor: PropTypes.string,
         searchDelay: PropTypes.number,
         data: PropTypes.array,
+        itemTemplate: PropTypes.any,
+        itemColor: PropTypes.string,
         listHeight: PropTypes.number,
         listRadius: PropTypes.number,
-        listItemColor: PropTypes.string,
         listBackground: PropTypes.string,
         listNoDataText: PropTypes.string.def('暂无符合条件的数据'),
         onChange: PropTypes.func,
@@ -185,29 +187,95 @@ export default defineComponent({
             )
         },
         getListResultElem() {
-            const res = []
-            for (let i = 0, l = this.list.length; i < l; i++) {
-                const cur = this.list[i]
-                const avatar = cur.avatar ? `<div class="${this.prefixCls}-item-avatar">
-                    <img src="${cur.avatar}" />
-                </div>` : ''
-                const width = this.width
-                    ? (avatar ? `${tools.pxToRem(this.width < 260 ? 180 : this.width - 80)}rem` : null)
-                    : null
-                const info = `<div class="${this.prefixCls}-item-info" style="width: ${width}">
-                    ${cur[this.searchKey]}
-                </div>`
-                res.push(
-                    <div class={`${this.prefixCls}-item`}
-                        style={{color: this.listItemColor ?? null}}
-                        onClick={(e: any) => this.handleItemClick(this.datas[cur[this.prefixIndex]] ?? cur, e)}
-                        innerHTML={avatar + info}>
-                    </div>
-                )
+            let res = []
+            const template = getSlotContent(this, 'itemTemplate')
+            if (template) {
+                const templates = isVNode(template) ? [template] : template
+                for (let n = 0, len = this.list.length; n < len; n++) {
+                    const item = {...this.list[n]}
+                    const elems = []
+                    for (let i = 0, l = templates.length; i < l; i++) {
+                        const curTemplate = templates[i]
+                        if (isVNode(curTemplate)) {
+                            let elem = cloneVNode(curTemplate)
+                            if ((curTemplate.type as any).name === MiSearchKey.name) {
+                                const tag = curTemplate.props.tag
+                                const name = curTemplate.props.name
+                                const type = curTemplate.props.type
+                                elem = createVNode(
+                                    <MiSearchKey name={name}
+                                        data={item[name]}
+                                        tag={tag}
+                                        type={type}>
+                                    </MiSearchKey>
+                                )
+                            }
+                            elem = this.getCustomItemDetailElem(elem, item)
+                            elems.push(elem)
+                        }
+                    }
+                    res.push(
+                        <div class={`${this.prefixCls}-item`}
+                            style={{color: this.itemColor ?? null}}
+                            onClick={(e: any) => this.handleItemClick(this.datas[item[this.prefixIndex]] ?? item, e)}>
+                            { elems }
+                        </div>
+                    )
+                }
+            } else {
+                for (let i = 0, l = this.list.length; i < l; i++) {
+                    const cur = this.list[i]
+                    const avatar = cur.avatar ? `<div class="${this.prefixCls}-item-avatar">
+                        <img src="${cur.avatar}" />
+                    </div>` : ''
+                    const width = this.width
+                        ? (avatar ? `${tools.pxToRem(this.width < 260 ? 180 : this.width - 80)}rem` : null)
+                        : null
+                    const info = `<div class="${this.prefixCls}-item-info" style="width: ${width}">
+                        ${cur[this.searchKey]}
+                    </div>`
+                    res.push(
+                        <div class={`${this.prefixCls}-item`}
+                            style={{color: this.itemColor ?? null}}
+                            onClick={(e: any) => this.handleItemClick(this.datas[cur[this.prefixIndex]] ?? cur, e)}
+                            innerHTML={avatar + info}>
+                        </div>
+                    )
+                }
             }
             return res.length > 0 ? (
                 <div class={`${this.prefixCls}-items`}>{ res }</div>
             ) : null
+        },
+        getCustomItemDetailElem(node: VNode, item: any) {
+            if (
+                node &&
+                node.children &&
+                node.children.length > 0
+            ) {
+                const data = {...item}
+                const children = []
+                for (let i = 0, l = node.children.length; i < l; i++) {
+                    let child = cloneVNode(node.children[i])
+                    if (isVNode(child)) {
+                        if ((child.type as any).name === MiSearchKey.name) {
+                            const tag = child.props.tag
+                            const name = child.props.name
+                            const type = child.props.type
+                            children[i] = createVNode(
+                                <MiSearchKey name={name}
+                                    data={item[name]}
+                                    tag={tag}
+                                    type={type}>
+                                </MiSearchKey>
+                            )
+                        }
+                        child = this.getCustomItemDetailElem(child, data)
+                    }
+                }
+                node.children = children
+            }
+            return node
         },
         getLoadingElem() {
             const loadingCls = `${this.prefixCls}-loading`
@@ -259,3 +327,8 @@ export default defineComponent({
         </div>
     }
 })
+
+MiSearch.Key = MiSearchKey
+export default MiSearch as typeof MiSearch & {
+    readonly Key: typeof MiSearchKey
+}

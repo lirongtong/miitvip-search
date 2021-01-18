@@ -1,3 +1,5 @@
+import { Fragment } from 'vue'
+
 class MiTools {
     /**
      * Whether it is a mobile phone.
@@ -93,6 +95,50 @@ class MiTools {
         let node = instance && (instance.$el || instance)
         while (node && !node.tagName) node = node.nextSibling
         return node
+    }
+
+    /**
+     * Whether the element is empty.
+     * @param elem 
+     */
+    isEmptyElement(elem: any) {
+        return (
+            elem.type === Comment ||
+            (elem.type === Fragment && elem.children.length === 0) ||
+            (elem.type === Text && elem.children.trim() == '')
+        )
+    }
+
+    /**
+     * Whether the value is valid.
+     * @param value 
+     */
+    isValid(value: any): boolean {
+        return value !== undefined && value !== null && value !== ''
+    }
+
+    random(): string {
+        return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
+    }
+
+    /**
+     * Generate unique string.
+     * @param upper
+     * @returns {string}
+     */
+    uid(upper = false, prefix?: string): string {
+        let str = (
+            this.random() +
+            this.random() +
+            this.random() +
+            this.random() +
+            this.random() +
+            this.random() +
+            this.random() +
+            this.random()
+        ).toLocaleUpperCase()
+        if (prefix) str = prefix + str
+        return upper ? str.toUpperCase() : str.toLowerCase()
     }
 
     /**
