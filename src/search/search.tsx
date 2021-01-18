@@ -188,11 +188,20 @@ export default defineComponent({
             const res = []
             for (let i = 0, l = this.list.length; i < l; i++) {
                 const cur = this.list[i]
+                const avatar = cur.avatar ? `<div class="${this.prefixCls}-item-avatar">
+                    <img src="${cur.avatar}" />
+                </div>` : ''
+                const width = this.width
+                    ? (avatar ? `${tools.pxToRem(this.width < 260 ? 180 : this.width - 80)}rem` : null)
+                    : null
+                const info = `<div class="${this.prefixCls}-item-info" style="width: ${width}">
+                    ${cur[this.searchKey]}
+                </div>`
                 res.push(
                     <div class={`${this.prefixCls}-item`}
                         style={{color: this.listItemColor ?? null}}
                         onClick={(e: any) => this.handleItemClick(this.datas[cur[this.prefixIndex]] ?? cur, e)}
-                        innerHTML={cur[this.searchKey]}>
+                        innerHTML={avatar + info}>
                     </div>
                 )
             }

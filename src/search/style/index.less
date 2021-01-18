@@ -15,12 +15,21 @@
     justify-content: @justify;
 }
 
+/** Border Radius */
 .border-radius(@raduis: 4) {
     -moz-border-radius: (@raduis / @mi-font-size-base) * @mi-font-size;
     -webkit-border-radius: (@raduis / @mi-font-size-base) * @mi-font-size;
     -o-border-radius: (@raduis / @mi-font-size-base) * @mi-font-size;
     -khtml-border-radius: (@raduis / @mi-font-size-base) * @mi-font-size;
     border-radius: (@raduis / @mi-font-size-base) * @mi-font-size;
+}
+
+.border-radius-circle() {
+    -moz-border-radius: 50%;
+    -webkit-border-radius: 50%;
+    -o-border-radius: 50%;
+    -khtml-border-radius: 50%;
+    border-radius: 50%;
 }
 
 /** Properties */
@@ -85,7 +94,7 @@
         box-shadow: 0 0 6px #d9d9d9;
         overflow-x: hidden;
         overflow-y: auto;
-        
+
         &::-webkit-scrollbar {
             width: 4px;
             height: 4px;
@@ -217,6 +226,28 @@
         color: fade(#000, 70%);
         cursor: pointer;
         .text-ellipsis();
+        .flex(center, flex-start);
+        flex-wrap: nowrap;
+
+        &-avatar {
+            .properties(width, 24);
+            .properties(height, 24);
+            .properties(margin-right);
+
+            img {
+                width: 100%;
+                height: 100%;
+                .border-radius-circle();
+            }
+        }
+
+        &-info {
+            .text-ellipsis();
+        }
+
+        &-avatar + &-info {
+            .properties(max-width, 288);
+        }
 
         &:hover, &:focus {
             background: fade(#000, 3%);
