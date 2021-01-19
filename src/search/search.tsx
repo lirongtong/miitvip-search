@@ -32,6 +32,8 @@ const MiSearch = defineComponent({
         listRadius: PropTypes.number,
         listBackground: PropTypes.string,
         listNoDataText: PropTypes.string.def('暂无符合条件的数据'),
+        pagination: PropTypes.bool.def(false),
+        pageSize: PropTypes.number.def(10),
         onChange: PropTypes.func,
         onInput: PropTypes.func,
         onPressEnter: PropTypes.func,
@@ -54,7 +56,11 @@ const MiSearch = defineComponent({
             list: [],
             error: '',
             timer: null,
-            clickOutside: null
+            clickOutside: null,
+            page: {
+                total: 0,
+                active: 1
+            }
         }
     },
     beforeUnmount() {
@@ -183,38 +189,28 @@ const MiSearch = defineComponent({
                     { error }
                     { this.getLoadingElem() }
                     { this.getListResultElem() }
+                    { this.getPaginationElem() }
                 </div>
             )
         },
         getListResultElem() {
             let res = []
             const template = getSlotContent(this, 'itemTemplate')
+            let min = 0
+            let max = 0
+            if (this.pagination) {
+                min = (this.page.active - 1) * this.pageSize
+                max = this.page.active * this.pageSize
+            }
             if (template) {
                 const templates = isVNode(template) ? [template] : template
                 for (let n = 0, len = this.list.length; n < len; n++) {
                     const item = {...this.list[n]}
-                    const elems = []
-                    for (let i = 0, l = templates.length; i < l; i++) {
-                        const curTemplate = templates[i]
-                        if (isVNode(curTemplate)) {
-                            let elem = cloneVNode(curTemplate)
-                            if ((curTemplate.type as any).name === MiSearchKey.name) {
-                                const tag = curTemplate.props.tag
-                                const name = curTemplate.props.name
-                                const type = curTemplate.props.type
-                                elem = createVNode(
-                                    <MiSearchKey name={name}
-                                        data={item[name]}
-                                        tag={tag}
-                                        type={type}>
-                                    </MiSearchKey>
-                                )
-                            }
-                            elem = this.getCustomItemDetailElem(elem, item)
-                            elems.push(elem)
-                        }
-                    }
-                    res.push(
+                    let elems = []
+                    if (this.pagination) {
+                        if (n >= min && n < max) elems = this.renderCustomResultListElem(templates, item)
+                    } else elems = this.renderCustomResultListElem(templates, item)
+                    if (elems.length > 0) res.push(
                         <div class={`${this.prefixCls}-item`}
                             style={{color: this.itemColor ?? null}}
                             onClick={(e: any) => this.handleItemClick(this.datas[item[this.prefixIndex]] ?? item, e)}>
@@ -225,20 +221,15 @@ const MiSearch = defineComponent({
             } else {
                 for (let i = 0, l = this.list.length; i < l; i++) {
                     const cur = this.list[i]
-                    const avatar = cur.avatar ? `<div class="${this.prefixCls}-item-avatar">
-                        <img src="${cur.avatar}" />
-                    </div>` : ''
-                    const width = this.width
-                        ? (avatar ? `${tools.pxToRem(this.width < 260 ? 180 : this.width - 80)}rem` : null)
-                        : null
-                    const info = `<div class="${this.prefixCls}-item-info" style="width: ${width}">
-                        ${cur[this.searchKey]}
-                    </div>`
-                    res.push(
+                    let elem: any = null
+                    if (this.pagination) {
+                        if (i >= min && i < max) elem = this.renderResultListElem(cur)
+                    } else elem = this.renderResultListElem(cur)
+                    if (elem) res.push(
                         <div class={`${this.prefixCls}-item`}
                             style={{color: this.itemColor ?? null}}
                             onClick={(e: any) => this.handleItemClick(this.datas[cur[this.prefixIndex]] ?? cur, e)}
-                            innerHTML={avatar + info}>
+                            innerHTML={elem}>
                         </div>
                     )
                 }
@@ -246,6 +237,42 @@ const MiSearch = defineComponent({
             return res.length > 0 ? (
                 <div class={`${this.prefixCls}-items`}>{ res }</div>
             ) : null
+        },
+        renderResultListElem(item: any) {
+            const avatar = item.avatar ? `<div class="${this.prefixCls}-item-avatar">
+                <img src="${item.avatar}" />
+            </div>` : ''
+            const width = this.width
+                ? (avatar ? `${tools.pxToRem(this.width < 260 ? 180 : this.width - 80)}rem` : null)
+                : null
+            const info = `<div class="${this.prefixCls}-item-info" style="width: ${width}">
+                ${item[this.searchKey]}
+            </div>`
+            return avatar + info
+        },
+        renderCustomResultListElem(templates: VNode[], item: any) {
+            const elems = []
+            for (let i = 0, l = templates.length; i < l; i++) {
+                const curTemplate = templates[i]
+                if (isVNode(curTemplate)) {
+                    let elem = cloneVNode(curTemplate)
+                    if ((curTemplate.type as any).name === MiSearchKey.name) {
+                        const tag = curTemplate.props.tag
+                        const name = curTemplate.props.name
+                        const type = curTemplate.props.type
+                        elem = createVNode(
+                            <MiSearchKey name={name}
+                                data={item[name]}
+                                tag={tag}
+                                type={type}>
+                            </MiSearchKey>
+                        )
+                    }
+                    elem = this.getCustomItemDetailElem(elem, item)
+                    elems.push(elem)
+                }
+            }
+            return elems
         },
         getCustomItemDetailElem(node: VNode, item: any) {
             if (
@@ -276,6 +303,38 @@ const MiSearch = defineComponent({
                 node.children = children
             }
             return node
+        },
+        handlePageInputChange(e: any) {
+            const value = e.target.value
+            if (value) this.page.active = value
+            if (value > this.page.total) this.page.active = this.page.total
+            if (!value) {
+                this.page.active = 1
+                this.$forceUpdate()
+            }
+        },
+        handlePageInputBlur(e: any) {
+            this.handlePageInputChange(e)
+        },
+        handlePageInputKeydown(e: KeyboardEvent) {
+            if (e.keyCode === 13) this.handlePageInputChange(e)
+        },
+        getPaginationElem() {
+            if (
+                this.pagination &&
+                !this.error &&
+                !this.loading &&
+                this.list.length > 0
+            ) {
+                const total = Math.ceil(this.list.length / this.pageSize)
+                this.page.total = total
+                return (
+                    <div class={`${this.prefixCls}-pagination`}>
+                        <div>第<input value={this.page.active} onInput={this.handlePageInputChange} onBlur={this.handlePageInputBlur} min={1} max={total} onKeydown={this.handlePageInputKeydown} /> / { total } 页</div>
+                        <div>共<span>{ this.list.length }</span>条</div>
+                    </div>
+                )
+            }
         },
         getLoadingElem() {
             const loadingCls = `${this.prefixCls}-loading`

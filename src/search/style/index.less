@@ -257,6 +257,47 @@
     &-key {
         color: #ed4014;
     }
+
+    &-pagination {
+        .flex();
+        .properties(padding, 16);
+        .properties(font-size, 14);
+        .properties(padding-bottom, 24);
+        .letter-spacing();
+
+        > div {
+            .flex();
+            .properties(margin-right, 16);
+
+            &:last-child {
+                margin-right: 0;
+            }
+
+            span {
+                .properties(margin-left, 4);
+                .properties(margin-right, 4);
+                .properties(max-width, 40);
+                .text-ellipsis();
+            }
+
+            input {
+                .properties(width, 32);
+                .properties(height, 24);
+                border: 1px solid fade(#000, 30%);
+                .border-radius();
+                .flex();
+                text-align: center;
+                .properties(margin-left, 4);
+                .properties(margin-right);
+                outline: none;
+
+                &:hover, &:focus {
+                    outline: none;
+                    border: 1px solid fade(#000, 30%);
+                }
+            }
+        }
+    }
 }
 
 @keyframes mi-anim-move {
