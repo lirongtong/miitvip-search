@@ -34,6 +34,7 @@ const MiSearch = defineComponent({
         listNoDataText: PropTypes.string.def('暂无符合条件的数据'),
         pagination: PropTypes.bool.def(false),
         pageSize: PropTypes.number.def(10),
+        pageColor: PropTypes.string,
         onChange: PropTypes.func,
         onInput: PropTypes.func,
         onPressEnter: PropTypes.func,
@@ -73,7 +74,7 @@ const MiSearch = defineComponent({
         this.page.active = 1
     },
     mounted() {
-        this.list = this.datas
+        this.list = this.datas ?? []
         if (!this.clickOutside) this.clickOutside = tools.on(document.body, 'click', this.handleDocumentClick)
     },
     methods: {
@@ -94,8 +95,10 @@ const MiSearch = defineComponent({
                             this.error = errors.join('')
                         }
                     }).catch((err: any) => {
-                        this.loading = false
-                        this.error = `<p>接口请求失败</p><p>${err.message}</p>`
+                        if (this.loading) {
+                            this.loading = false
+                            this.error = `<p>接口请求失败</p><p>${err.message}</p>`
+                        }
                     })
                 } else {
                     this.loading = false
@@ -134,13 +137,13 @@ const MiSearch = defineComponent({
             this.keyword = (e.target as HTMLInputElement).value
             this.list = []
             this.page.active = 1
+            this.error = ''
             if (this.keyword) {
                 this.loading = true
                 this.handleSearch()
             } else {
-                this.list = this.datas
+                this.list = this.datas ?? []
                 this.loading = false
-                this.error = ''
             }
             this.$emit('update:value', this.keyword)
             this.$emit('input', e)
@@ -264,7 +267,7 @@ const MiSearch = defineComponent({
                         const type = curTemplate.props.type
                         elem = createVNode(
                             <MiSearchKey name={name}
-                                data={item[name]}
+                                data={tools.htmlEncode(item[name])}
                                 tag={tag}
                                 type={type}>
                             </MiSearchKey>
@@ -285,20 +288,20 @@ const MiSearch = defineComponent({
                 const data = {...item}
                 const children = []
                 for (let i = 0, l = node.children.length; i < l; i++) {
-                    let child = cloneVNode(node.children[i])
-                    if (isVNode(child)) {
+                    if (isVNode(node.children[i])) {
+                        let child = cloneVNode(node.children[i])
                         if ((child.type as any).name === MiSearchKey.name) {
                             const tag = child.props.tag
                             const name = child.props.name
                             const type = child.props.type
                             children[i] = createVNode(
                                 <MiSearchKey name={name}
-                                    data={item[name]}
+                                    data={tools.htmlEncode(item[name])}
                                     tag={tag}
                                     type={type}>
                                 </MiSearchKey>
                             )
-                        }
+                        } else children[i] = child
                         child = this.getCustomItemDetailElem(child, data)
                     }
                 }
@@ -336,8 +339,9 @@ const MiSearch = defineComponent({
             ) {
                 const total = Math.ceil(this.list.length / this.pageSize)
                 this.page.total = total
+                const style = {color: this.pageColor ?? null}
                 return (
-                    <div class={`${this.prefixCls}-pagination`}>
+                    <div class={`${this.prefixCls}-pagination`} style={style}>
                         <div>
                             <span class={`prev${this.page.active <= 1 ? ' disabled' : ''}`} title="上一页" onClick={this.handlePagePrev}>&lt;</span>
                             第<input value={this.page.active} onInput={this.handlePageInputChange} onBlur={this.handlePageInputBlur} min={1} max={total} onKeydown={this.handlePageInputKeydown} /> / { total } 页

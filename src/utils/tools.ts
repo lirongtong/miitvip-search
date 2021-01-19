@@ -197,6 +197,18 @@ class MiTools {
             return color
         }
     }
+
+    /**
+     * Transfer.
+     * @param html 
+     */
+    htmlEncode(html: string) {
+        let temp = document.createElement('div') as HTMLDivElement
+        (temp.textContent != null) ? (temp.textContent = html) : (temp.innerText = html)
+        var output = temp.innerHTML
+        temp = null
+        return output
+    }
 }
 
 export default new MiTools()

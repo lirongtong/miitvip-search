@@ -6,12 +6,61 @@ body {
 #app {
     width: 100vw;
     height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
 }
 
 *, :after, :before {
     box-sizing: border-box;
+}
+
+.mi-searchs {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-direction: column;
+
+    .mi-search {
+        margin-bottom: 12px;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+
+        .avatar {
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+
+            img {
+                width: 100%;
+                height: 100%;
+                border-radius: 24px;
+            }
+        }
+
+        .info {
+            max-width: 285px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            flex-direction: column;
+
+            .title {
+                font-weight: 700;
+                margin-bottom: 8px;
+            }
+
+            .content {
+                font-size: 12px;
+                color: #999;
+                display: block;
+                max-width: 285px;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                overflow: hidden;
+            }
+        }
+    }
 }
