@@ -267,7 +267,7 @@
 
         > div {
             .flex();
-            .properties(margin-right, 16);
+            .properties(margin-right);
 
             &:last-child {
                 margin-right: 0;
@@ -278,6 +278,20 @@
                 .properties(margin-right, 4);
                 .properties(max-width, 40);
                 .text-ellipsis();
+                .properties(line-height, 24);
+
+                &.prev,
+                &.next {
+                    .properties(width, 24);
+                    .properties(height, 24);
+                    .flex();
+                    cursor: pointer;
+                }
+
+                &.disabled {
+                    color: fade(#000, 30%);
+                    cursor: not-allowed;
+                }
             }
 
             input {

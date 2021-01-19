@@ -70,6 +70,7 @@ const MiSearch = defineComponent({
         this.clickOutside = null
         this.keyword = ''
         this.isFocused = false
+        this.page.active = 1
     },
     mounted() {
         this.list = this.datas
@@ -132,6 +133,7 @@ const MiSearch = defineComponent({
         handleOnInput(e: Event) {
             this.keyword = (e.target as HTMLInputElement).value
             this.list = []
+            this.page.active = 1
             if (this.keyword) {
                 this.loading = true
                 this.handleSearch()
@@ -319,6 +321,12 @@ const MiSearch = defineComponent({
         handlePageInputKeydown(e: KeyboardEvent) {
             if (e.keyCode === 13) this.handlePageInputChange(e)
         },
+        handlePagePrev() {
+            if (this.page.active > 1) this.page.active = this.page.active - 1
+        },
+        handlePageNext() {
+            if (this.page.active + 1 <= this.page.total) this.page.active = this.page.active + 1
+        },
         getPaginationElem() {
             if (
                 this.pagination &&
@@ -330,7 +338,11 @@ const MiSearch = defineComponent({
                 this.page.total = total
                 return (
                     <div class={`${this.prefixCls}-pagination`}>
-                        <div>第<input value={this.page.active} onInput={this.handlePageInputChange} onBlur={this.handlePageInputBlur} min={1} max={total} onKeydown={this.handlePageInputKeydown} /> / { total } 页</div>
+                        <div>
+                            <span class={`prev${this.page.active <= 1 ? ' disabled' : ''}`} title="上一页" onClick={this.handlePagePrev}>&lt;</span>
+                            第<input value={this.page.active} onInput={this.handlePageInputChange} onBlur={this.handlePageInputBlur} min={1} max={total} onKeydown={this.handlePageInputKeydown} /> / { total } 页
+                            <span class={`next${this.page.active >= this.page.total ? ' disabled' : ''}`} title="下一页" onClick={this.handlePageNext}>&gt;</span>
+                        </div>
                         <div>共<span>{ this.list.length }</span>条</div>
                     </div>
                 )

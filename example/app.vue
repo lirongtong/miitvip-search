@@ -1,5 +1,5 @@
 <template>
-    <mi-search :data="data" search-key="title" :pagination="true"></mi-search>
+    <mi-search :data="data" search-key="title"></mi-search>
 </template>
 
 <script lang="ts">
