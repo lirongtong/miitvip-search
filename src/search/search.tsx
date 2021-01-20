@@ -268,7 +268,11 @@ const MiSearch = defineComponent({
                         const type = curTemplate.props.type
                         elem = createVNode(
                             <MiSearchKey name={name}
-                                data={tools.htmlEncode(item[name])}
+                                data={
+                                    name !== this.searchKey 
+                                        ? tools.htmlEncode(item[name])
+                                        : item[name]
+                                }
                                 tag={tag}
                                 type={type}>
                             </MiSearchKey>
@@ -297,7 +301,11 @@ const MiSearch = defineComponent({
                             const type = child.props.type
                             children[i] = createVNode(
                                 <MiSearchKey name={name}
-                                    data={tools.htmlEncode(item[name])}
+                                    data={
+                                        name !== this.searchKey
+                                            ? tools.htmlEncode(item[name])
+                                            : item[name]
+                                    }
                                     tag={tag}
                                     type={type}>
                                 </MiSearchKey>
