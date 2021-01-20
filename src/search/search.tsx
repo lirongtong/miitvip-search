@@ -350,13 +350,13 @@ const MiSearch = defineComponent({
                 this.page.total = total
                 const style = {color: this.pageColor ?? null}
                 return (
-                    <div class={`${this.prefixCls}-pagination`} style={style}>
-                        <div>
+                    <div class={`${this.prefixCls}-pagination`}>
+                        <div style={style}>
                             <span class={`prev${this.page.active <= 1 ? ' disabled' : ''}`} title="上一页" onClick={this.handlePagePrev}>&lt;</span>
                             第<input value={this.page.active} onInput={this.handlePageInputChange} onBlur={this.handlePageInputBlur} min={1} max={total} onKeydown={this.handlePageInputKeydown} /> / { total } 页
                             <span class={`next${this.page.active >= this.page.total ? ' disabled' : ''}`} title="下一页" onClick={this.handlePageNext}>&gt;</span>
                         </div>
-                        <div>共<span>{ this.list.length }</span>条</div>
+                        <div style={style}>共<span>{ this.list.length }</span>条</div>
                     </div>
                 )
             }
