@@ -33,6 +33,9 @@ const MiSearch = defineComponent({
         listHeight: PropTypes.number,
         listRadius: PropTypes.number,
         listBackground: PropTypes.string,
+        listBoxShadow: PropTypes.bool.def(true),
+        listBoxShadowColor: PropTypes.string,
+        listBoxShadowBlur: PropTypes.number.def(6),
         listNoDataText: PropTypes.string.def('暂无符合条件的数据'),
         pagination: PropTypes.bool.def(false),
         pageSize: PropTypes.number.def(10),
@@ -183,7 +186,8 @@ const MiSearch = defineComponent({
                 top: this.height ? `${tools.pxToRem(this.height)}rem` : null,
                 background: this.listBackground ?? null,
                 borderColor: this.borderColor ?? null,
-                borderRadius: this.listRadius ? `${tools.pxToRem(this.listRadius)}rem` : null
+                borderRadius: this.listRadius ? `${tools.pxToRem(this.listRadius)}rem` : null,
+                boxShadow: this.listBoxShadow && this.listBoxShadowColor ? `0 0 ${tools.pxToRem(this.listBoxShadowBlur)}rem ${this.listBoxShadowColor}` : null
             }
             const cls = `${this.prefixCls}-list${this.list.length <= 0 ? ` ${this.prefixCls}-no-data` : ''}`
             const noData = this.list.length <= 0 &&
