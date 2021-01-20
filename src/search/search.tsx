@@ -14,6 +14,7 @@ const MiSearch = defineComponent({
         value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         placeholder: PropTypes.string,
         borderColor: PropTypes.string,
+        className: PropTypes.string,
         textColor: PropTypes.string,
         backgroundColor: PropTypes.string,
         boxShadow: PropTypes.bool.def(false),
@@ -386,7 +387,8 @@ const MiSearch = defineComponent({
             boxShadow: this.boxShadow ? `0 0 ${tools.pxToRem(this.boxShadowBlur)}rem ${this.boxShadowColor}` : null
         }
         const modal = this.modal ? this.getSearchListElem() : null
-        return <div class={this.prefixCls} style={size}>
+        const cls = `${this.prefixCls}${this.className ? ` ${this.className}` : ''}${tools.isMobile() ? ` ${this.prefixCls}-mobile` : ''}`
+        return <div class={cls} style={size}>
             <input class={`${this.prefixCls}-input`}
                 name={this.prefixCls}
                 placeholder={this.placeholder}
