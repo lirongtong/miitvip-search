@@ -32,6 +32,7 @@ const MiSearch = defineComponent({
         listWidth: PropTypes.number,
         listHeight: PropTypes.number,
         listRadius: PropTypes.number,
+        listBorderColor: PropTypes.string,
         listBackground: PropTypes.string,
         listBoxShadow: PropTypes.bool.def(true),
         listBoxShadowColor: PropTypes.string,
@@ -185,7 +186,7 @@ const MiSearch = defineComponent({
                 height: this.listHeight ? `${tools.pxToRem(this.listHeight)}rem` : null,
                 top: this.height ? `${tools.pxToRem(this.height)}rem` : null,
                 background: this.listBackground ?? null,
-                borderColor: this.borderColor ?? null,
+                borderColor: this.listBorderColor ?? this.borderColor ?? null,
                 borderRadius: this.listRadius ? `${tools.pxToRem(this.listRadius)}rem` : null,
                 boxShadow: this.listBoxShadow && this.listBoxShadowColor ? `0 0 ${tools.pxToRem(this.listBoxShadowBlur)}rem ${this.listBoxShadowColor}` : null
             }
