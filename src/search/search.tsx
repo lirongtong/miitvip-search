@@ -29,6 +29,7 @@ const MiSearch = defineComponent({
         data: PropTypes.array,
         itemTemplate: PropTypes.any,
         itemColor: PropTypes.string,
+        listWidth: PropTypes.number,
         listHeight: PropTypes.number,
         listRadius: PropTypes.number,
         listBackground: PropTypes.string,
@@ -177,6 +178,7 @@ const MiSearch = defineComponent({
         },
         getSearchListElem() {
             const style = {
+                width: this.listWidth ? `${tools.pxToRem(this.listWidth)}rem` : null,
                 height: this.listHeight ? `${tools.pxToRem(this.listHeight)}rem` : null,
                 top: this.height ? `${tools.pxToRem(this.height)}rem` : null,
                 background: this.listBackground ?? null,
