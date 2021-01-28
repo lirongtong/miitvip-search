@@ -59,7 +59,7 @@ const MiSearch = defineComponent({
             keyword: '',
             isFocused: false,
             modal: false,
-            datas: this.$props.data,
+            datas: this.$props.data ?? [],
             list: [],
             error: '',
             timer: null,
