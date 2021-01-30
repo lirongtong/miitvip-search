@@ -78,6 +78,7 @@ const MiSearch = defineComponent({
         this.keyword = ''
         this.isFocused = false
         this.page.active = 1
+        tools.off(document.body, 'click', this.handleDocumentClick)
     },
     mounted() {
         this.list = this.datas ?? []
@@ -172,7 +173,6 @@ const MiSearch = defineComponent({
             this.$emit('keyup', e)
         },
         handleDocumentClick(e: any) {
-            e.preventDefault()
             const target = e.target
             const root = tools.findDOMNode(this)
             if (root && !root.contains(target)) {
