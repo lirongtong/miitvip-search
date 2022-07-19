@@ -1,422 +1,518 @@
-import { defineComponent, isVNode, createVNode, VNode, cloneVNode } from 'vue'
-import axios from 'axios'
+import {
+    defineComponent,
+    Transition,
+    reactive,
+    Teleport,
+    isVNode,
+    VNode,
+    cloneVNode,
+    Component,
+    h
+} from 'vue'
 import MiSearchKey from './key'
-import PropTypes, { getSlotContent } from '../utils/props'
-import tools from '../utils/tools'
+import {
+    FormOutlined,
+    FrownOutlined,
+    LeftCircleOutlined,
+    RightCircleOutlined
+} from '@ant-design/icons-vue'
+import { getPrefixCls, getPropSlot } from '../utils/props-tools'
+import { searchProps } from './props'
+import { $tools } from '../utils/tools'
+import { $g } from '../utils/global'
+import { $request } from '../utils/request'
 
 const MiSearch = defineComponent({
     name: 'MiSearch',
     inheritAttrs: false,
-    props: {
-        width: PropTypes.number,
-        height: PropTypes.number,
-        radius: PropTypes.number,
-        value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-        placeholder: PropTypes.string,
-        borderColor: PropTypes.string,
-        className: PropTypes.string,
-        textColor: PropTypes.string,
-        backgroundColor: PropTypes.string,
-        boxShadow: PropTypes.bool.def(false),
-        boxShadowColor: PropTypes.string.def('#d9d9d9'),
-        boxShadowBlur: PropTypes.number.def(6),
-        searchAction: PropTypes.string,
-        searchMethod: PropTypes.string.def('post'),
-        searchParams: PropTypes.object.def({}),
-        searchKey: PropTypes.string.isRequired,
-        searchKeyColor: PropTypes.string,
-        searchDelay: PropTypes.number,
-        data: PropTypes.array,
-        itemTemplate: PropTypes.any,
-        itemColor: PropTypes.string,
-        listWidth: PropTypes.number,
-        listHeight: PropTypes.number,
-        listRadius: PropTypes.number,
-        listBorderColor: PropTypes.string,
-        listBackground: PropTypes.string,
-        listBoxShadow: PropTypes.bool.def(true),
-        listBoxShadowColor: PropTypes.string,
-        listBoxShadowBlur: PropTypes.number.def(6),
-        listNoDataText: PropTypes.string.def('暂无符合条件的数据'),
-        pagination: PropTypes.bool.def(false),
-        pageSize: PropTypes.number.def(10),
-        pageColor: PropTypes.string,
-        onChange: PropTypes.func,
-        onInput: PropTypes.func,
-        onPressEnter: PropTypes.func,
-        onKeydown: PropTypes.func,
-        onKeyup: PropTypes.func,
-        onFocus: PropTypes.func,
-        onBlur: PropTypes.func,
-        onItemClick: PropTypes.func,
-        'onUpdate:value': PropTypes.func
-    },
-    data() {
-        return {
-            prefixCls: 'mi-search',
-            prefixIndex: 'mi-index',
+    props: searchProps(),
+    slots: ['itemTemplate', 'suffix'],
+    emits: [
+        'focus',
+        'blur',
+        'keydown',
+        'keyup',
+        'pressEnter',
+        'itemClick',
+        'input',
+        'change',
+        'update:value',
+        'close'
+    ],
+    setup(props, { slots, attrs, emit }) {
+        const prefixCls = getPrefixCls('search', props.prefixCls)
+        const prefixIdx = getPrefixCls('index')
+        const listAnim = getPrefixCls(`anim-${props.listShowAnimation}`)
+        const itemAnim = getPrefixCls('anim-slide')
+        const params = reactive({
             loading: false,
             keyword: '',
-            isFocused: false,
-            modal: false,
-            datas: this.$props.data ?? [],
-            list: [],
-            error: '',
+            show: false,
+            focused: false,
+            datas: props.data ?? [],
+            list: props.data ?? [],
+            error: null,
             timer: null,
-            clickOutside: null,
             page: {
                 total: 0,
                 active: 1
             }
-        }
-    },
-    beforeUnmount() {
-        this.loading = false
-        this.modal = false
-        this.error = ''
-        this.clickOutside = null
-        this.keyword = ''
-        this.isFocused = false
-        this.page.active = 1
-        tools.off(document.body, 'click', this.handleDocumentClick)
-    },
-    mounted() {
-        this.list = this.datas ?? []
-        if (!this.clickOutside) this.clickOutside = tools.on(document.body, 'click', this.handleDocumentClick)
-    },
-    methods: {
-        handleSearch() {
-            const search = () => {
-                if (this.searchAction) {
-                    axios[this.searchMethod.toLowerCase()](this.searchAction, this.searchParams).then((res: any) => {
-                        const response = res.data
-                        this.loading = false
-                        if (response.ret.code === 1) {
-                            this.datas = response.data
-                            this.handleSearchResult()
-                        } else {
-                            const errors = []
-                            errors.push('<p>源数据获取失败，搜索失败 ...</p>')
-                            errors.push(`<p>错误代码：${response.ret.code}</p>`)
-                            errors.push(`<p>错误原因：${response.ret.message}</p>`)
-                            this.error = errors.join('')
-                        }
-                    }).catch((err: any) => {
-                        if (this.loading) {
-                            this.loading = false
-                            this.error = `<p>接口请求失败</p><p>${err.message}</p>`
-                        }
-                    })
-                } else {
-                    this.loading = false
-                    this.handleSearchResult()
-                }
-            }
-            if (this.searchDelay) {
-                if (this.timer) clearTimeout(this.timer)
-                this.timer = setTimeout(() => {
-                    search()
-                }, this.searchDelay * 1000)
-            } else search()
-        },
-        handleSearchResult() {
-            const reg = new RegExp(this.keyword, 'ig')
-            for (let i = 0, l = this.datas.length; i < l; i++) {
-                const cur = this.datas[i]
-                if (
-                    cur[this.searchKey] &&
-                    reg.test(cur[this.searchKey])
-                ) {
-                    const data = {...cur}
-                    data[this.searchKey] = cur[this.searchKey].replace(
-                        reg,
-                        `<span class="${this.prefixCls}-key" style="color: ${this.searchKeyColor ?? null}">${this.keyword}</span>`
-                    )
-                    data[this.prefixIndex] = i
-                    this.list.push(data)
-                }
-            }
-        },
-        handleItemClick(data: any, e?: any) {
-            this.$emit('item-click', data, e)
-        },
-        handleOnInput(e: Event) {
-            this.keyword = (e.target as HTMLInputElement).value
-            this.list = []
-            this.page.active = 1
-            this.error = ''
-            if (this.keyword) {
-                this.loading = true
-                this.handleSearch()
-            } else {
-                this.list = this.datas ?? []
-                this.loading = false
-            }
-            this.$emit('update:value', this.keyword)
-            this.$emit('input', e)
-            this.$emit('change', e)
-        },
-        handleOnFocus(e: Event) {
-            this.isFocused = true
-            this.modal = true
-            this.onFocus && this.onFocus(e)
-        },
-        handleOnBlur(e: Event) {
-            this.isFocused = false
-            this.onBlur && this.onBlur(e)
-        },
-        handleKeyDown(e: KeyboardEvent) {
-            if (e.keyCode === 13) this.$emit('pressEnter', e)
-            this.$emit('keydown', e)
-        },
-        handleKeyUp(e: KeyboardEvent) {
-            this.$emit('keyup', e)
-        },
-        handleDocumentClick(e: any) {
-            const target = e.target
-            const root = tools.findDOMNode(this)
-            if (root && !root.contains(target)) {
-                this.modal = false
-                this.isFocused = false
-            }
-        },
-        getSearchListElem() {
+        }) as { [index: string]: any }
+
+        const renderList = () => {
             const style = {
-                width: this.listWidth ? `${tools.pxToRem(this.listWidth)}rem` : null,
-                height: this.listHeight ? `${tools.pxToRem(this.listHeight)}rem` : null,
-                top: this.height ? `${tools.pxToRem(this.height)}rem` : null,
-                background: this.listBackground ?? null,
-                borderColor: this.listBorderColor ?? this.borderColor ?? null,
-                borderRadius: this.listRadius ? `${tools.pxToRem(this.listRadius)}rem` : null,
-                boxShadow: this.listBoxShadow && this.listBoxShadowColor ? `0 0 ${tools.pxToRem(this.listBoxShadowBlur)}rem ${this.listBoxShadowColor}` : null
-            }
-            const cls = `${this.prefixCls}-list${this.list.length <= 0 ? ` ${this.prefixCls}-no-data` : ''}`
-            const noData = this.list.length <= 0 &&
-                !this.loading && !this.error ? (
-                <p>{ this.listNoDataText }</p>
-            ) : null
-            const error = this.error ? <div class={`${this.prefixCls}-error`} innerHTML={this.error}></div> : null
-            return (
-                <div class={cls} style={style}>
-                    { noData }
-                    { error }
-                    { this.getLoadingElem() }
-                    { this.getListResultElem() }
-                    { this.getPaginationElem() }
+                width: props.listWidth ? `${$tools.px2Rem(props.listWidth)}rem` : null,
+                height: props.listHeight
+                    ? `${$tools.px2Rem(props.listHeight > 164 ? props.listHeight : 164)}rem`
+                    : null,
+                top: props.height ? `${$tools.px2Rem(props.height)}rem` : null,
+                background: props.listBackground ?? null,
+                borderColor: props.listBorderColor ?? null,
+                borderRadius: props.listRadius ? `${$tools.px2Rem(props.listRadius)}rem` : null,
+                boxShadow:
+                    props.listBoxShadow && props.listBoxShadowColor
+                        ? `0 0 ${$tools.px2Rem(props.listBoxShadowBlur)}rem ${
+                              props.listBoxShadowColor
+                          }`
+                        : null,
+                marginTop: props.gap ? `${$tools.px2Rem(props.gap)}rem` : null
+            } as { [index: string]: any }
+            const elem = (
+                <>
+                    {/* no data */}
+                    {params.list.length <= 0 && !params.loading && !params.error ? (
+                        <div class={`${prefixCls}-no-data`}>
+                            <FormOutlined />
+                            <p>{props.listNoDataText ?? '暂无符合条件的数据'}</p>
+                        </div>
+                    ) : null}
+                    {/* error */}
+                    {params.error ? <div class={`${prefixCls}-error`}>{params.error}</div> : null}
+                    {renderLoading()}
+                    {renderResultList()}
+                    {renderPagination()}
+                </>
+            )
+            const res = props.listDestroyOnHide ? (
+                params.show ? (
+                    <div class={`${prefixCls}-list`} style={style}>
+                        {elem}
+                    </div>
+                ) : null
+            ) : (
+                <div class={`${prefixCls}-list`} style={style} v-show={params.show}>
+                    {elem}
                 </div>
             )
-        },
-        getListResultElem() {
-            let res = []
-            const template = getSlotContent(this, 'itemTemplate')
+            return (
+                <Transition name={listAnim} appear={true}>
+                    {res}
+                </Transition>
+            )
+        }
+
+        const renderResultList = () => {
+            const res: any[] = []
+            const template = getPropSlot(slots, props, 'itemTemplate')
             let min = 0
             let max = 0
-            if (this.pagination) {
-                min = (this.page.active - 1) * this.pageSize
-                max = this.page.active * this.pageSize
+            if (props.pagination) {
+                min = (params.page.active - 1) * props.pageSize
+                max = params.page.active * props.pageSize
+            }
+            const key = getPrefixCls(`item-${min}-${max}`, props.prefixCls)
+            const pushResultItem = (item: {}, elem: any) => {
+                res.push(
+                    <div
+                        class={`${prefixCls}-item`}
+                        style={{
+                            color: props.itemColor ?? null,
+                            borderBottomColor: props.itemBorderBottomColor ?? null
+                        }}
+                        onClick={(evt: Event) =>
+                            handleListItemClick(params.datas[item[prefixIdx]] ?? item, evt)
+                        }>
+                        {elem}
+                    </div>
+                )
             }
             if (template) {
                 const templates = isVNode(template) ? [template] : template
-                for (let n = 0, len = this.list.length; n < len; n++) {
-                    const item = {...this.list[n]}
-                    let elems = []
-                    if (this.pagination) {
-                        if (n >= min && n < max) elems = this.renderCustomResultListElem(templates, item)
-                    } else elems = this.renderCustomResultListElem(templates, item)
-                    if (elems.length > 0) res.push(
-                        <div class={`${this.prefixCls}-item`}
-                            style={{color: this.itemColor ?? null}}
-                            onClick={(e: any) => this.handleItemClick(this.datas[item[this.prefixIndex]] ?? item, e)}>
-                            { elems }
-                        </div>
-                    )
-                }
+                params.list?.forEach((item: {}, idx: number) => {
+                    let elems: any[] = []
+                    if (props.pagination) {
+                        if (idx >= min && idx < max) elems = renderCustomResultList(templates, item)
+                    } else elems = renderCustomResultList(templates, item)
+                    if (elems.length > 0) pushResultItem(item, elems)
+                })
             } else {
-                for (let i = 0, l = this.list.length; i < l; i++) {
-                    const cur = this.list[i]
+                params.list?.forEach((item: {}, idx: number) => {
                     let elem: any = null
-                    if (this.pagination) {
-                        if (i >= min && i < max) elem = this.renderResultListElem(cur)
-                    } else elem = this.renderResultListElem(cur)
-                    if (elem) res.push(
-                        <div class={`${this.prefixCls}-item`}
-                            style={{color: this.itemColor ?? null}}
-                            onClick={(e: any) => this.handleItemClick(this.datas[cur[this.prefixIndex]] ?? cur, e)}
-                            innerHTML={elem}>
-                        </div>
-                    )
-                }
+                    if (props.pagination) {
+                        if (idx >= min && idx < max) elem = renderDefaultResultList(item)
+                    } else elem = renderDefaultResultList(item)
+                    if (elem) pushResultItem(item, elem)
+                })
             }
             return res.length > 0 ? (
-                <div class={`${this.prefixCls}-items`}>{ res }</div>
+                <Transition name={itemAnim} appear={true}>
+                    <div class={`${prefixCls}-items`} key={key}>
+                        {res}
+                    </div>
+                </Transition>
             ) : null
-        },
-        renderResultListElem(item: any) {
-            const avatar = item.avatar ? `<div class="${this.prefixCls}-item-avatar">
-                <img src="${item.avatar}" />
-            </div>` : ''
-            const width = this.width
-                ? (avatar ? `${tools.pxToRem(this.width < 260 ? 180 : this.width - 80)}rem` : null)
-                : null
-            const info = `<div class="${this.prefixCls}-item-info" style="width: ${width}">
-                ${item[this.searchKey]}
-            </div>`
-            return avatar + info
-        },
-        renderCustomResultListElem(templates: VNode[], item: any) {
-            const elems = []
-            for (let i = 0, l = templates.length; i < l; i++) {
-                const curTemplate = templates[i]
-                if (isVNode(curTemplate)) {
-                    let elem = cloneVNode(curTemplate)
-                    if ((curTemplate.type as any).name === MiSearchKey.name) {
-                        const tag = curTemplate.props.tag
-                        const name = curTemplate.props.name
-                        const type = curTemplate.props.type
-                        elem = createVNode(
-                            <MiSearchKey name={name}
-                                data={
-                                    name !== this.searchKey 
-                                        ? tools.htmlEncode(item[name])
-                                        : item[name]
-                                }
-                                tag={tag}
-                                type={type}>
-                            </MiSearchKey>
-                        )
+        }
+
+        const renderDefaultResultList = (item: any) => {
+            const avatar = item.avatar ? (
+                <div class={`${prefixCls}-item-avatar`}>
+                    <img src={item.avatar} alt={item.name ?? $g.powered} />
+                </div>
+            ) : null
+            let icon: any = null
+            if (item.icon) {
+                const IconTag = isVNode(item.icon) ? item.icon : h(item.icon)
+                icon = <IconTag />
+            }
+            const width = (
+                props.width
+                    ? avatar
+                        ? `${$tools.px2Rem(props.width > 260 ? 180 : props.width - 80)}rem`
+                        : null
+                    : null
+            ) as any
+            const info = (
+                <div
+                    class={`${prefixCls}-item-info${
+                        item.content ? ` ${prefixCls}-item-info-has-content` : ''
+                    }`}
+                    style={{ width }}>
+                    <div innerHTML={item[props.searchKey]} />
+                    <div
+                        innerHTML={item.content ?? null}
+                        style={{ color: props.itemContentColor ?? null }}
+                    />
+                </div>
+            )
+            return (
+                <>
+                    {avatar ?? icon ?? null}
+                    {info}
+                </>
+            )
+        }
+
+        const renderCustomResultList = (templates: VNode[], item: object) => {
+            const elems: any[] = []
+            templates?.forEach((template: VNode) => {
+                if (isVNode(template)) {
+                    let elem = cloneVNode(template)
+                    if ((template?.type as Component).name === MiSearchKey.name) {
+                        elem = renderSearchKey(template, item)
                     }
-                    elem = this.getCustomItemDetailElem(elem, item)
+                    elem = renderCustomResultListItem(elem, item)
                     elems.push(elem)
                 }
-            }
+            })
             return elems
-        },
-        getCustomItemDetailElem(node: VNode, item: any) {
-            if (
-                node &&
-                node.children &&
-                node.children.length > 0
-            ) {
-                const data = {...item}
-                const children = []
+        }
+
+        const renderCustomResultListItem = (node: VNode | any, item: object) => {
+            if (node?.children?.length > 0) {
+                const data = { ...item }
+                const children: any[] = []
                 for (let i = 0, l = node.children.length; i < l; i++) {
-                    if (isVNode(node.children[i])) {
-                        let child = cloneVNode(node.children[i])
-                        if ((child.type as any).name === MiSearchKey.name) {
-                            const tag = child.props.tag
-                            const name = child.props.name
-                            const type = child.props.type
-                            children[i] = createVNode(
-                                <MiSearchKey name={name}
-                                    data={
-                                        name !== this.searchKey
-                                            ? tools.htmlEncode(item[name])
-                                            : item[name]
-                                    }
-                                    tag={tag}
-                                    type={type}>
-                                </MiSearchKey>
-                            )
+                    const cur = node.children[i]
+                    if (isVNode(cur)) {
+                        let child = cloneVNode(cur)
+                        if ((child.type as Component).name === MiSearchKey.name) {
+                            children[i] = renderSearchKey(child, item)
                         } else children[i] = child
-                        child = this.getCustomItemDetailElem(child, data)
+                        child = renderCustomResultListItem(child, data)
                     }
                 }
                 node.children = children
             }
             return node
-        },
-        handlePageInputChange(e: any) {
-            const value = e.target.value
-            if (value) this.page.active = value
-            if (value > this.page.total) this.page.active = this.page.total
-            if (!value) {
-                this.page.active = 1
-                this.$forceUpdate()
-            }
-        },
-        handlePageInputBlur(e: any) {
-            this.handlePageInputChange(e)
-        },
-        handlePageInputKeydown(e: KeyboardEvent) {
-            if (e.keyCode === 13) this.handlePageInputChange(e)
-        },
-        handlePagePrev() {
-            if (this.page.active > 1) this.page.active = this.page.active - 1
-        },
-        handlePageNext() {
-            if (this.page.active + 1 <= this.page.total) this.page.active = this.page.active + 1
-        },
-        getPaginationElem() {
-            if (
-                this.pagination &&
-                !this.error &&
-                !this.loading &&
-                this.list.length > 0
-            ) {
-                const total = Math.ceil(this.list.length / this.pageSize)
-                this.page.total = total
-                const style = {color: this.pageColor ?? null}
-                return (
-                    <div class={`${this.prefixCls}-pagination`}>
-                        <div style={style}>
-                            <span class={`prev${this.page.active <= 1 ? ' disabled' : ''}`} title="上一页" onClick={this.handlePagePrev}>&lt;</span>
-                            第<input value={this.page.active} onInput={this.handlePageInputChange} onBlur={this.handlePageInputBlur} min={1} max={total} onKeydown={this.handlePageInputKeydown} /> / { total } 页
-                            <span class={`next${this.page.active >= this.page.total ? ' disabled' : ''}`} title="下一页" onClick={this.handlePageNext}>&gt;</span>
-                        </div>
-                        <div style={style}>共<span>{ this.list.length }</span>条</div>
-                    </div>
-                )
-            }
-        },
-        getLoadingElem() {
-            const loadingCls = `${this.prefixCls}-loading`
-            const style1 = {borderColor: this.borderColor ?? null}
-            const style2 = {background: this.borderColor ?? null}
-            return this.loading ? (
-                <div class={loadingCls}>
-                    <div class={`${loadingCls}-spinner`}>
-                        <div class="load">
+        }
+
+        const renderSearchKey = (node: VNode, item: {}) => {
+            const tag = (node.props as any).tag
+            const name = (node.props as any).name
+            const type = (node.props as any).type
+            const key = $tools.uid(false, $g.prefix)
+            return (
+                <MiSearchKey
+                    name={name}
+                    tag={tag}
+                    data={name !== props.searchKey ? $tools.htmlEncode(item[name]) : item[name]}
+                    type={type}
+                    key={key}
+                />
+            )
+        }
+
+        const renderLoading = () => {
+            return params.loading ? (
+                <div class={`${prefixCls}-loading`}>
+                    <div class={`${prefixCls}-loading-spinner`}>
+                        <div class={`${prefixCls}-loading-anim`}>
                             <div>
                                 <div>
-                                    <div style={style1}></div>
-                                    <div style={style2}></div>
+                                    <div style={{ borderColor: props.borderColor ?? null }}></div>
+                                    <div style={{ background: props.borderColor ?? null }}></div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class={`${loadingCls}-tip`}>正在搜索</div>
+                    <div class={`${prefixCls}-loading-text`}>搜索中 ···</div>
                 </div>
             ) : null
         }
-    },
-    render() {
-        const size = {
-            width: this.width ? `${tools.pxToRem(this.width)}rem` : null,
-            height: this.height ? `${tools.pxToRem(this.height)}rem` : null
+
+        const renderPagination = () => {
+            const len = params.list.length
+            if (props.pagination && !params.error && !params.loading && len > 0) {
+                const total = Math.ceil(len / props.pageSize)
+                params.page.total = total
+                return (
+                    <div
+                        class={`${prefixCls}-pagination`}
+                        style={{ borderTopColor: props.pageBorderTopColor ?? null }}>
+                        <div class={`${prefixCls}-pagination-page`} style={style.page}>
+                            <span
+                                class={`prev${params.page.active <= 1 ? ' disabled' : ''}`}
+                                title="上一页"
+                                onClick={handlePagePrev}>
+                                <LeftCircleOutlined />
+                            </span>
+                            第
+                            <input
+                                min={1}
+                                max={total}
+                                type="mumber"
+                                value={params.page.active}
+                                onInput={handlePageInputChange}
+                                onBlur={handlePageInputBlur}
+                                onKeydown={handlePageInputKeydown}
+                            />
+                            / {total} 页
+                            <span
+                                class={`next${
+                                    params.page.active >= params.page.total ? ' disabled' : ''
+                                }`}
+                                title="下一页"
+                                onClick={handlePageNext}>
+                                <RightCircleOutlined />
+                            </span>
+                        </div>
+                        <div class={`${prefixCls}-pagination-total`} style={style.page}>
+                            共 <span>{len}</span> 条
+                        </div>
+                    </div>
+                )
+            }
         }
+
+        const handlePagePrev = () => {
+            if (params.page.active > 1) params.page.active--
+        }
+        const handlePageNext = () => {
+            const next = params.page.active + 1
+            if (next <= params.page.total) params.page.active = next
+        }
+        const handlePageInputChange = (evt: Event) => {
+            const value = parseInt((evt.target as HTMLInputElement).value)
+            if (value) params.page.active = value
+            if (value > params.page.total) params.page.active = params.page.total
+            if (!value) params.page.active = 1
+        }
+        const handlePageInputBlur = (evt: Event) => {
+            handlePageInputChange(evt)
+        }
+        const handlePageInputKeydown = (evt: KeyboardEvent) => {
+            if (evt.key === 'Enter') handlePageInputChange(evt)
+        }
+
+        const handleSearch = () => {
+            const search = () => {
+                if (props.searchAction) {
+                    $request[props.searchMethod.toLowerCase()](
+                        props.searchAction,
+                        props.searchParams
+                    )
+                        .then((res: any) => {
+                            params.loading = false
+                            if (res.ret.code === 200) {
+                                params.datas = res.data
+                                handleSearchResult()
+                            } else {
+                                params.error = (
+                                    <>
+                                        <FrownOutlined />
+                                        <p>源数据获取失败，无法完成搜索</p>
+                                        <p>{'错误代码：' + res.ret.code}</p>
+                                        <p>{'错误原因：' + res.ret.message}</p>
+                                    </>
+                                )
+                            }
+                        })
+                        .catch((err: any) => {
+                            if (params.loading) {
+                                params.loading = false
+                                params.error = (
+                                    <>
+                                        <FrownOutlined />
+                                        <p>接口发生了不可预知的错误</p>
+                                        <p>{err.message}</p>
+                                    </>
+                                )
+                            }
+                        })
+                } else {
+                    params.loading = false
+                    handleSearchResult()
+                }
+            }
+            if (props.searchDelay) {
+                if (params.timer) clearTimeout(params.timer)
+                params.timer = setTimeout(() => search(), props.searchDelay)
+            } else search()
+        }
+
+        const handleSearchResult = () => {
+            const reg = new RegExp(params.keyword, 'ig')
+            params.datas?.forEach((data: {}, idx: number) => {
+                if (data[props.searchKey] && reg.test(data[props.searchKey])) {
+                    const temp = { ...data }
+                    temp[props.searchKey] = data[props.searchKey].replace(
+                        reg,
+                        `<span class="${prefixCls}-key" ${
+                            style.keyword ? `style="${style.keyword}"` : ''
+                        }>${params.keyword}</span>`
+                    )
+                    temp[prefixIdx] = idx
+                    params.list.push(temp)
+                }
+            })
+        }
+
+        const handleListItemClick = (data: any, evt?: any) => {
+            emit('itemClick', data, evt)
+            if (props.colseAfterItemClick) {
+                params.show = false
+                emit('close')
+            }
+        }
+
+        const handleOnFocus = (evt: Event) => {
+            params.focused = true
+            params.show = true
+            emit('focus', evt)
+        }
+
+        const handleOnBlur = (evt: Event) => {
+            params.focused = false
+            emit('blur', evt)
+        }
+
+        const handleOnInput = (evt: Event) => {
+            params.keyword = (evt.target as HTMLInputElement).value
+            params.list = []
+            params.page.active = 1
+            params.error = null
+            if (params.keyword) {
+                params.loading = true
+                handleSearch()
+            } else {
+                params.list = params.datas ?? []
+                params.loading = false
+            }
+            emit('update:value', params.keyword)
+            emit('input', evt)
+            emit('change', evt)
+        }
+
+        const handleOnKeydown = (evt: KeyboardEvent) => {
+            if (evt.key === 'Enter') emit('pressEnter', evt)
+            emit('keydown', evt)
+        }
+
+        const handleOnKeyup = (evt: KeyboardEvent) => {
+            emit('keyup', evt)
+        }
+
+        const handleMaskClick = () => {
+            params.show = false
+            params.focused = false
+            emit('close')
+        }
+
+        const handleSearchOnClickBtn = () => {
+            if (params.keyword) {
+                params.loading = true
+                handleSearch()
+            }
+        }
+
         const style = {
-            backgroundColor: this.backgroundColor ?? null,
-            borderRadius: this.radius ? `${tools.pxToRem(this.radius)}rem` : null,
-            borderColor: this.borderColor ?? null,
-            color: this.textColor ?? null,
-            boxShadow: this.boxShadow ? `0 0 ${tools.pxToRem(this.boxShadowBlur)}rem ${this.boxShadowColor}` : null
-        }
-        const modal = this.modal ? this.getSearchListElem() : null
-        const cls = `${this.prefixCls}${this.className ? ` ${this.className}` : ''}${tools.isMobile() ? ` ${this.prefixCls}-mobile` : ''}`
-        return <div class={cls} style={size}>
-            <input class={`${this.prefixCls}-input`}
-                name={this.prefixCls}
-                placeholder={this.placeholder}
-                style={style}
-                value={this.keyword}
-                onFocus={this.handleOnFocus}
-                onBlur={this.handleOnBlur}
-                onInput={this.handleOnInput}
-                onKeydown={this.handleKeyDown}
-                onKeyup={this.handleKeyUp}
-                ref={this.prefixCls} />
-            { modal }
-        </div>
+            box: {
+                width: props.width ? `${$tools.px2Rem(props.width)}rem` : null,
+                height: props.height ? `${$tools.px2Rem(props.height)}rem` : null
+            },
+            input: {
+                background: props.backgroundColor ?? null,
+                borderRadius: props.radius ? `${$tools.px2Rem(props.radius)}rem` : null,
+                borderColor: props.borderColor ?? null,
+                color: props.textColor ?? null,
+                boxShadow: props.boxShadow
+                    ? `0 0 ${$tools.px2Rem(props.boxShadowBlur)}rem ${props.boxShadowColor}`
+                    : null
+            },
+            keyword: props.searchKeyColor ? `color: ${props.searchKeyColor}` : null,
+            page: { color: props.pageColor ?? null }
+        } as { [index: string]: any }
+
+        const suffix = getPropSlot(slots, props, 'suffix')
+        const suffixTag = props.suffix ? (
+            <div class={`${prefixCls}-suffix`} onClick={handleSearchOnClickBtn}>
+                {isVNode(suffix) ? suffix : h(suffix)}
+            </div>
+        ) : null
+
+        return () => (
+            <>
+                <div class={prefixCls} {...attrs} style={style.box}>
+                    <input
+                        class={`${prefixCls}-input${
+                            props.suffix ? ` ${prefixCls}-has-suffix` : ''
+                        }`}
+                        name={prefixCls}
+                        ref={prefixCls}
+                        placeholder={props.placeholder ?? '请输入要搜索的关键词'}
+                        value={params.keyword}
+                        onFocus={handleOnFocus}
+                        onBlur={handleOnBlur}
+                        onInput={handleOnInput}
+                        onKeydown={handleOnKeydown}
+                        onKeyup={handleOnKeyup}
+                        style={style.input}
+                    />
+                    {suffixTag}
+                    {renderList()}
+                </div>
+                {params.show ? (
+                    <Teleport to="body">
+                        <div
+                            class={`${prefixCls}-mask`}
+                            onClick={handleMaskClick}
+                            key={$tools.uid(false, $g.prefix)}
+                            style={{ display: params.show ? null : 'none' } as any}
+                        />
+                    </Teleport>
+                ) : null}
+            </>
+        )
     }
 })
 

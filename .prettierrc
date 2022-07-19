@@ -6,6 +6,8 @@
     "tabWidth": 4,
     "ignorePath": ".prettierrcignore",
     "trailingComma": "none",
+    "bracketSameLine": true,
+    "htmlWhitespaceSensitivity": "ignore",
     "overrides": [
         {
             "files": ".prettierrc",

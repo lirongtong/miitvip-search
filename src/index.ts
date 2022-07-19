@@ -1,15 +1,14 @@
 import { App } from 'vue'
-import { version } from '../package.json'
-import { default as Search } from './search'
+import { default as Captcha } from './search'
 
 const install = (app: App) => {
-    app.use(Search)
+    app.use(Captcha)
     return app
 }
 
-export { Search }
+export { Captcha }
 
 export default {
-    version,
+    version: '1.1.2',
     install
 }

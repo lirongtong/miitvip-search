@@ -1,26 +1,44 @@
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import VueJsx from '@vitejs/plugin-vue-jsx'
+import EslintPlugin from 'vite-plugin-eslint'
 import path from 'path'
 const resolve = (dir: string) => path.join(__dirname, dir)
 
-const config = {
-    alias: {
-        '/@/': resolve('example'),
-        '/@src/': resolve('src'),
-        'makeit-search': '/@src/index.ts',
-        'makeit-search/style': '/@src/style.ts'
+export default defineConfig({
+    resolve: {
+        alias: {
+            '@': resolve('example'),
+            '@src': resolve('src'),
+            'makeit-search': resolve('src'),
+            'makeit-search/style': resolve('src/style.ts')
+        }
     },
-    cssPreprocessOptions: {
-        less: {
-            javascriptEnabled: true
+    css: {
+        preprocessorOptions: {
+            less: {
+                javascriptEnabled: true
+            }
         }
     },
     optimizeDeps: {
         include: ['vue', 'axios']
     },
-    proxy: {
-        '/v1': {
-            target: 'http://local-api.makeit.vip',
-            changeOrigin: true
+    server: {
+        proxy: {
+            '/v1': {
+                target: 'http://local-api.makeit.vip',
+                changeOrigin: true
+            }
         }
+    },
+    plugins: [
+        vue(),
+        VueJsx(),
+        EslintPlugin()
+    ],
+    esbuild: {
+        jsxFactory: 'h',
+        jsxFragment: 'Fragment'
     }
-}
-module.exports = config
+})

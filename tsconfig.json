@@ -1,5 +1,5 @@
 {
-    "compilerOptions": {
+	"compilerOptions": {
 		"target": "esnext",
 		"module": "esnext",
 		"strict": true,
@@ -20,10 +20,14 @@
 		"declarationDir": "es",
 		"allowJs": true,
 		"resolveJsonModule": true,
-        "baseUrl": "./",
-        "paths": {
-			"makeit-search": ["src/index.ts"],
-			"makeit-search/style": ["src/style.ts"]
+		"baseUrl": "./",
+		"paths": {
+			"makeit-search": [
+				"src/index.ts"
+			],
+			"makeit-search/style": [
+				"src/style.ts"
+			]
 		},
 		"lib": [
 			"esnext",
