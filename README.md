@@ -39,7 +39,7 @@
 ## 安装
 
 ```bash
-npm i makeit-captcha
+npm i makeit-search
 ```
 
 ## 使用
