@@ -32,11 +32,7 @@ export default defineConfig({
             }
         }
     },
-    plugins: [
-        vue(),
-        VueJsx(),
-        EslintPlugin()
-    ],
+    plugins: [vue(), VueJsx(), EslintPlugin()],
     esbuild: {
         jsxFactory: 'h',
         jsxFragment: 'Fragment'
