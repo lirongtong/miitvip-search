@@ -102,39 +102,39 @@ const itemClick = (data) => {
 
 const data = [{
     title: '登录页面',
-    avatar: 'https://file.makeit.vip/MIIT/M00/00/00/ajRkHV_pUyOALE2LAAAtlj6Tt_s370.png',
+    avatar: 'https://file.makeit.vip/MIITVIP/M00/00/00/K4vDRGPcbmmAG8_sAAAtlj6Tt_s562.png',
     content: '登录页面封装了username / password等常用属性字段，若所需属性与自身需求不符的话，请自行定义整个form表单内容，暂不支持动态配置字段内容（若有需要，可后续集成）。'
 }, {
     title: '滑块验证',
-    avatar: 'https://file.makeit.vip/MIIT/M00/00/00/ajRkHV_pUyOALE2LAAAtlj6Tt_s370.png',
+    avatar: 'https://file.makeit.vip/MIITVIP/M00/00/00/K4vDRGPcbmmAG8_sAAAtlj6Tt_s562.png',
     content: '滑块验证码组件常用于各种表单提交前的验证。'
 }, {
     title: '菜单选项',
-    avatar: 'https://file.makeit.vip/MIIT/M00/00/00/ajRkHV_pUyOALE2LAAAtlj6Tt_s370.png',
+    avatar: 'https://file.makeit.vip/MIITVIP/M00/00/00/K4vDRGPcbmmAG8_sAAAtlj6Tt_s562.png',
     content: '左侧菜单默认为空，可通过全局变量 this.$g.menus.items 进行配置。'
 }, {
     title: '注册页面',
-    avatar: 'https://file.makeit.vip/MIIT/M00/00/00/ajRkHV_pUyOALE2LAAAtlj6Tt_s370.png',
+    avatar: 'https://file.makeit.vip/MIITVIP/M00/00/00/K4vDRGPcbmmAG8_sAAAtlj6Tt_s562.png',
     content: '注册页面封装了基础的usernamepassword等属性，若属性与自己需求不符的话，需要自行定义整个form表单内容，暂不支持动态配置字段内容（若有需要，可后续集成）。'
 }, {
     title: '弹窗动效',
-    avatar: 'https://file.makeit.vip/MIIT/M00/00/00/ajRkHV_pUyOALE2LAAAtlj6Tt_s370.png',
+    avatar: 'https://file.makeit.vip/MIITVIP/M00/00/00/K4vDRGPcbmmAG8_sAAAtlj6Tt_s562.png',
     content: '弹窗的作用在于，当前处理中的事务中包含与整体事务流程不相关，但又与某个事务节点存在关系的事务，当前情况下肯定不希望跳转页面来处理单个节点的事务而导致整个事务流程中断，此时Modal组件可以在当前页面打开一个浮层来处理事务节点，不影响整个事务的流程。'
 }, {
     title: '基础布局',
-    avatar: 'https://file.makeit.vip/MIIT/M00/00/00/ajRkHV_pUyOALE2LAAAtlj6Tt_s370.png',
+    avatar: 'https://file.makeit.vip/MIITVIP/M00/00/00/K4vDRGPcbmmAG8_sAAAtlj6Tt_s562.png',
     content: '基于Ant Desing Vue的Layout布局组件，实现个性化的定制。'
 }, {
     title: '密码设置',
-    avatar: 'https://file.makeit.vip/MIIT/M00/00/00/ajRkHV_pUyOALE2LAAAtlj6Tt_s370.png',
+    avatar: 'https://file.makeit.vip/MIITVIP/M00/00/00/K4vDRGPcbmmAG8_sAAAtlj6Tt_s562.png',
     content: '该组件作用于表单内，快速定义密码设定的相关内容及样式。'
 }, {
     title: '下拉菜单',
-    avatar: 'https://file.makeit.vip/MIIT/M00/00/00/ajRkHV_pUyOALE2LAAAtlj6Tt_s370.png',
+    avatar: 'https://file.makeit.vip/MIITVIP/M00/00/00/K4vDRGPcbmmAG8_sAAAtlj6Tt_s562.png',
     content: '该组件封装了ADropdown及ADropdownItem组件，以便传入数据后快速生成定制化的菜单选项。'
 }, {
     title: '消息中心',
-    avatar: 'https://file.makeit.vip/MIIT/M00/00/00/ajRkHV_pUyOALE2LAAAtlj6Tt_s370.png',
+    avatar: 'https://file.makeit.vip/MIITVIP/M00/00/00/K4vDRGPcbmmAG8_sAAAtlj6Tt_s562.png',
     content: '消息组件用于全局消息展示，以弹窗的形式的展示消息列表，支持多Tab切换展示。'
 }]
 </script>
