@@ -12,7 +12,7 @@
 
 <div align="center">
 
-基于 Vue3.x + Vite2.x 开发的搜索组件
+基于 Vue3.x + Vite4.x 开发的搜索组件
 
 [![npm package](https://img.shields.io/npm/v/makeit-search.svg?style=flat-square)](https://www.npmjs.org/package/makeit-search)
 [![npm_downloads](http://img.shields.io/npm/dm/makeit-search.svg?style=flat-square)](http://www.npmtrends.com/makeit-search)
